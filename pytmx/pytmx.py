@@ -14,7 +14,7 @@ logger.addHandler(ch)
 logger.setLevel(logging.INFO)
 
 __all__ = ['TiledMap', 'TiledTileset', 'TiledTileLayer', 'TiledObject',
-           'TiledObjectGroup', 'TiledImageLayer', 'TileFlags', 'parse_property']
+           'TiledObjectGroup', 'TiledImageLayer', 'TileFlags']
 
 # internal flags
 TRANS_FLIPX = 1
@@ -106,8 +106,22 @@ types.update({
 })
 
 
+def parse_literal(literal):
+    if literal.startswith('"') and literal.endswith('"') or literal.startswith("'") and literal.endswith("'"):
+        return literal[1:-1]
+    elif '.' in literal:
+        return float(literal)
+    elif literal.isdigit():
+        return int(literal)
+    else:
+        return literal
+
+
 def parse_property(prop):
-    return prop
+    if prop.startswith("(") and prop.endswith(")"):
+        return [parse_literal(x.strip()) for x in prop[1:-1].split(",")]
+    else:
+        return parse_literal(prop)
 
 
 def parse_properties(node):
@@ -122,7 +136,7 @@ def parse_properties(node):
             value = subnode.get('value')
             name = subnode.get('name')
 
-            if name not in types:
+            if name and name not in types:
                 value = parse_property(value)
 
             d[name] = value
