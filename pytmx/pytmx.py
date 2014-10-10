@@ -106,6 +106,20 @@ types.update({
 })
 
 
+def parse_literal(literal):
+    if literal.startswith('"') and literal.endswith('"') or literal.startswith("'") and literal.endswith("'"):
+        return literal[1:-1]
+    elif '.' in literal:
+        return float(literal)
+    else:
+        return int(literal)
+
+
+def parse_property(prop):
+    if prop.startswith("(") and prop.endswith(")"):
+        return [parse_literal(x.strip()) for x in prop[1:-1].split(",")]
+
+
 def parse_properties(node):
     """parse a node and return a dict that represents a tiled "property"
 
@@ -115,7 +129,13 @@ def parse_properties(node):
     d = dict()
     for child in node.findall('properties'):
         for subnode in child.findall('property'):
-            d[subnode.get('name')] = subnode.get('value')
+            value = subnode.get('value')
+            name = subnode.get('name')
+
+            if name not in types:
+                value = parse_property(value)
+
+            d[name] = value
     return d
 
 
